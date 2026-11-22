@@ -7,6 +7,8 @@
 HPACK ([RFC 7541](https://www.rfc-editor.org/rfc/rfc7541)) and HTTP/2
 ([RFC 9113](https://www.rfc-editor.org/rfc/rfc9113)) for **Mojo 1.0**.
 
+This mirror locks the Mojo build that antinuous/research pins, and a research toolchain bump moves this lock in the same batch.
+
 Two modules version together: **hpack** (standard library only) and **h2**
 (depends on hpack, [mojo-net](https://github.com/nsalerni/mojo-net), and
 [mojo-tls](https://github.com/nsalerni/mojo-tls)).
