@@ -423,7 +423,7 @@ struct Http2Connection[S: IOStream = TCPStream](Movable):
             put_u32_be(our, self.our_settings.initial_window_size)
         var advertised = Int(self.our_settings.initial_window_size)
         self._ensure_output_capacity(self._initial_settings_output_size())
-        self._queue_frame_unchecked(FRAME_SETTINGS, 0, 0, our^)
+        self._queue_frame_unchecked(FRAME_SETTINGS, 0, 0, our)
         if advertised > DEFAULT_WINDOW_SIZE:
             # SETTINGS_INITIAL_WINDOW_SIZE is stream-level only. Raise the
             # connection window with WINDOW_UPDATE so the larger stream
