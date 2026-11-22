@@ -29,6 +29,9 @@ def dep_src(name: str) -> str:
 def main() -> int:
     net = dep_src("mojo-net")
     tls = dep_src("mojo-tls")
+    shim = Path(os.environ["MOJO_TLS_SHIM"])
+    if not shim.is_file():
+        sys.exit(f"tls shim {shim} is absent; run `pixi run prepare-tls`")
     failed = 0
     for t in sorted((ROOT / "test").glob("test_*.mojo")):
         try:
