@@ -2,10 +2,10 @@
   "dir": ".deps",
   "deps": {
     "mojo-net": {
-      "ref": "v0.2.8"
+      "commit": "47303d0baa5e2155b4b73ee1f8c287ed45dc0ab9"
     },
     "mojo-tls": {
-      "ref": "v0.3.4"
+      "commit": "57f34aa274d123382ae51f26f44a4cf144c48db6"
     }
   }
 }
