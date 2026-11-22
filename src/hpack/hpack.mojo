@@ -304,7 +304,9 @@ struct Decoder(Movable):
         self.tree = HuffmanTree()
         self.protocol_max_size = max_table_size
 
-    def decode(mut self, data: Span[Byte, _]) raises -> List[HeaderField]:
+    def decode(
+        mut self, data: Span[Byte, _], list_size_max: Int = -1
+    ) raises -> List[HeaderField]:
         """Decodes one complete header block into its fields.
 
         Handles every representation of
@@ -317,6 +319,11 @@ struct Decoder(Movable):
         Args:
             data: The complete header block (all HEADERS plus CONTINUATION
                 fragments already concatenated).
+            list_size_max: Largest decoded header list, counted as in
+                RFC 9113 section 6.5.2 (name, value, and 32 bytes per
+                field), or -1 for no limit. Decoding stops as soon as the
+                list passes it, so indexed references to large table
+                entries cannot expand a small block without bound.
 
         Returns:
             The decoded fields in wire order.
@@ -324,12 +331,14 @@ struct Decoder(Movable):
         Raises:
             On any malformed block: truncated input, invalid index, bad
             Huffman coding, integer overflow, or a misplaced or oversized
-            table size update. The caller should treat this as a
-            COMPRESSION_ERROR at the connection level.
+            table size update, or a list past `list_size_max`. The caller
+            should treat this as a connection error.
         """
         var out = List[HeaderField]()
         var cur = _Cursor(data)
         var saw_field = False
+        var list_size = 0
+        var counted = 0
         while not cur.done():
             var first = cur.byte()
             if (first & 0x80) != 0:
@@ -357,6 +366,12 @@ struct Decoder(Movable):
                 var field = self._literal(cur, first, 4)
                 out.append(field^)
                 saw_field = True
+            while counted < len(out):
+                list_size += out[counted].name.byte_length() + 32
+                list_size += out[counted].value.byte_length()
+                counted += 1
+            if list_size_max >= 0 and list_size > list_size_max:
+                raise Error("hpack: header list too large")
         return out^
 
     def _literal(

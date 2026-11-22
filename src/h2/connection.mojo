@@ -1742,7 +1742,9 @@ struct Http2Connection[S: IOStream = TCPStream](Movable):
 
         var fields: List[HeaderField]
         try:
-            fields = self.hpack_dec.decode(Span(block))
+            fields = self.hpack_dec.decode(
+                Span(block), self.max_header_list_size
+            )
         except:
             self._conn_error(
                 ERR_COMPRESSION_ERROR, String("header block decode failed")
