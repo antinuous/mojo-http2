@@ -3,6 +3,7 @@
 
 import os
 import platform
+import re
 import shutil
 import subprocess
 import tempfile
@@ -63,6 +64,14 @@ def index_channel(channel: Path) -> None:
     )
 
 
+def recipe_version(root: Path) -> str:
+    """The version a fetched dependency's own recipe builds."""
+    match = re.search(r'^  version: "([^"]+)"$', (root / "recipe" / "recipe.yaml").read_text(), re.M)
+    if match is None:
+        raise RuntimeError(f"{root / 'recipe' / 'recipe.yaml'} names no version")
+    return match.group(1)
+
+
 def one_package(output: Path, pattern: str, name: str) -> Path:
     packages = sorted(output.rglob(pattern))
     if len(packages) != 1:
@@ -95,8 +104,9 @@ def main() -> None:
             ],
             PACKAGE_BUILD_TIMEOUT_SECONDS,
         )
+        net_version = recipe_version(MOJO_NET)
         net_package = one_package(
-            net_output, "mojo-net-0.2.8-*.conda", "mojo-net 0.2.8"
+            net_output, f"mojo-net-{net_version}-*.conda", f"mojo-net {net_version}"
         )
         shutil.copy2(net_package, channel_subdir / net_package.name)
         index_channel(channel)
@@ -117,8 +127,9 @@ def main() -> None:
         ]
         add_channels(tls_command, channel)
         run(tls_command, PACKAGE_BUILD_TIMEOUT_SECONDS)
+        tls_version = recipe_version(MOJO_TLS)
         tls_package = one_package(
-            tls_output, "mojo-tls-0.3.4-*.conda", "mojo-tls 0.3.4"
+            tls_output, f"mojo-tls-{tls_version}-*.conda", f"mojo-tls {tls_version}"
         )
         shutil.copy2(tls_package, channel_subdir / tls_package.name)
         index_channel(channel)
@@ -140,8 +151,9 @@ def main() -> None:
         add_channels(build_command, channel)
         run(build_command, PACKAGE_BUILD_TIMEOUT_SECONDS)
 
+        version = recipe_version(ROOT)
         package = one_package(
-            output, "mojo-http2-0.2.10-*.conda", "mojo-http2 0.2.10"
+            output, f"mojo-http2-{version}-*.conda", f"mojo-http2 {version}"
         )
 
         test_command = [
